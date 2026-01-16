@@ -15,7 +15,16 @@ function PatientList() {
   }, []);
 
   useEffect(() => {
-    handleSearch();
+    if (searchQuery.trim()) {
+      const filtered = patients.filter(p =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.nik.includes(searchQuery) ||
+        p.patientNo.includes(searchQuery)
+      );
+      setFilteredPatients(filtered);
+    } else {
+      setFilteredPatients(patients);
+    }
   }, [searchQuery, patients]);
 
   const fetchPatients = async () => {
@@ -26,19 +35,6 @@ function PatientList() {
       console.error('Error fetching patients:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSearch = async () => {
-    if (searchQuery.trim()) {
-      try {
-        const response = await patientAPI.search(searchQuery);
-        setFilteredPatients(response.data);
-      } catch (error) {
-        console.error('Search error:', error);
-      }
-    } else {
-      setFilteredPatients(patients);
     }
   };
 

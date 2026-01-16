@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { patientAPI, medicalRecordAPI, codingAPI } from '../api';
-import { Stethoscope, Clipboard, CheckCircle, BarChart3, Plus, Eye, Check, X, AlertCircle, CheckSquare, Square, Bell, Zap } from 'lucide-react';
-import PatientList from './PatientList';
+import { Stethoscope, Clipboard, CheckCircle, BarChart3, Eye, Check, X, AlertCircle, Zap } from 'lucide-react';
 import PatientRegistration from './PatientRegistration';
 
 function UnifiedDashboard({ activeRole, setActiveRole }) {
@@ -11,10 +10,8 @@ function UnifiedDashboard({ activeRole, setActiveRole }) {
   const [patients, setPatients] = useState([]);
   const [medicalRecords, setMedicalRecords] = useState([]);
   const [codings, setCodings] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(null);
   const [notification, setNotification] = useState(null);
-  const [validationResult, setValidationResult] = useState(null);
   const [auditChecklist, setAuditChecklist] = useState({
     formComplete: false,
     anamnesisFisik: false,
@@ -30,8 +27,6 @@ function UnifiedDashboard({ activeRole, setActiveRole }) {
     procedure: { procedureName: '', icd9cmCode: '', icd9cmDescription: '', snomedCTCode: '', snomedCTDisplay: '' },
     codedBy: ''
   });
-
-  const [autoMappingResult, setAutoMappingResult] = useState(null);
 
   // ICD to SNOMED mapping
   const icdSnomedMapping = {

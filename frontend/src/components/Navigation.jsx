@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 
 function Navigation({ user, onLogout }) {
   return (
