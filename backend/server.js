@@ -4,9 +4,13 @@ const cors = require('cors');
 
 app.use(cors({
   origin: '*',
+  credentials: false,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
+// ⬇️ INI PENTING (HANDLE PREFLIGHT)
+app.options('*', cors());
 
 require('dotenv').config();
 
