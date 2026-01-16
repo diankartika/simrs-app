@@ -93,7 +93,6 @@ function UnifiedDashboard({ activeRole, setActiveRole }) {
   }, []);
 
   const fetchAllData = async () => {
-    setLoading(true);
     try {
       const [patientsRes, codingsRes] = await Promise.all([
         patientAPI.getAll(),
@@ -103,8 +102,6 @@ function UnifiedDashboard({ activeRole, setActiveRole }) {
       setCodings(codingsRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -136,12 +133,6 @@ function UnifiedDashboard({ activeRole, setActiveRole }) {
     
     if (code && icdSnomedMapping[code]) {
       const mapping = icdSnomedMapping[code];
-      setAutoMappingResult({
-        from: code,
-        snomedCode: mapping.code,
-        snomedDisplay: mapping.display,
-        type: mapping.type
-      });
       setNewCoding(prev => ({
         ...prev,
         diagnosis: {
@@ -151,8 +142,6 @@ function UnifiedDashboard({ activeRole, setActiveRole }) {
           snomedCTDisplay: mapping.type
         }
       }));
-    } else {
-      setAutoMappingResult(null);
     }
   };
 
@@ -191,7 +180,6 @@ function UnifiedDashboard({ activeRole, setActiveRole }) {
         procedure: { procedureName: '', icd9cmCode: '', icd9cmDescription: '', snomedCTCode: '', snomedCTDisplay: '' },
         codedBy: ''
       });
-      setAutoMappingResult(null);
       setViewMode('list');
     } catch (error) {
       showNotif('Error: ' + error.message, 'error');
@@ -235,7 +223,7 @@ function UnifiedDashboard({ activeRole, setActiveRole }) {
 
   const roles = [
     { id: 'dokter', name: 'Dokter', icon: Stethoscope, color: 'blue' },
-    { id: 'coder', name: 'Pengkodea Medis (HIM)', icon: Clipboard, color: 'purple' },
+    { id: 'coder', name: 'Petugas Rekam Medis (HIM)', icon: Clipboard, color: 'purple' },
     { id: 'auditor', name: 'Auditor/QC', icon: CheckCircle, color: 'green' },
     { id: 'admin', name: 'Admin', icon: BarChart3, color: 'orange' }
   ];
@@ -392,17 +380,6 @@ function UnifiedDashboard({ activeRole, setActiveRole }) {
                         />
                       </div>
                     </div>
-
-                    {autoMappingResult && (
-                      <div className="mt-3 bg-green-50 border-l-4 border-green-500 p-3 rounded flex items-start gap-2">
-                        <Zap className="text-green-600 flex-shrink-0 mt-0.5" size={18} />
-                        <div>
-                          <p className="text-sm font-medium text-green-900">✨ Auto-Mapping SNOMED-CT Berhasil</p>
-                          <p className="text-sm text-green-700">{autoMappingResult.snomedCode}</p>
-                          <p className="text-sm text-green-600">{autoMappingResult.snomedDisplay}</p>
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                   <div className="border-l-4 border-purple-600 pl-4">
