@@ -235,7 +235,7 @@ function UnifiedDashboard({ activeRole, setActiveRole }) {
 
   const roles = [
     { id: 'dokter', name: 'Dokter', icon: Stethoscope, color: 'blue' },
-    { id: 'coder', name: 'Pengkodean Medis (HIM)', icon: Clipboard, color: 'purple' },
+    { id: 'coder', name: 'Pengkodea Medis (HIM)', icon: Clipboard, color: 'purple' },
     { id: 'auditor', name: 'Auditor/QC', icon: CheckCircle, color: 'green' },
     { id: 'admin', name: 'Admin', icon: BarChart3, color: 'orange' }
   ];
