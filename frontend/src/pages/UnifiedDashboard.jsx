@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { patientAPI, medicalRecordAPI, codingAPI } from '../api';
-import { Stethoscope, Clipboard, CheckCircle, BarChart3, Plus, Eye, Check, X, AlertCircle, CheckSquare, Square, Bell, Zap } from 'lucide-react';
-import PatientList from './PatientList';
+import { Stethoscope, Clipboard, CheckCircle, BarChart3, Eye, Check, X, AlertCircle, Zap } from 'lucide-react';
 import PatientRegistration from './PatientRegistration';
 
 function UnifiedDashboard({ activeRole, setActiveRole }) {
@@ -11,10 +10,8 @@ function UnifiedDashboard({ activeRole, setActiveRole }) {
   const [patients, setPatients] = useState([]);
   const [medicalRecords, setMedicalRecords] = useState([]);
   const [codings, setCodings] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(null);
   const [notification, setNotification] = useState(null);
-  const [validationResult, setValidationResult] = useState(null);
   const [auditChecklist, setAuditChecklist] = useState({
     formComplete: false,
     anamnesisFisik: false,
@@ -32,6 +29,16 @@ function UnifiedDashboard({ activeRole, setActiveRole }) {
   });
 
   const [autoMappingResult, setAutoMappingResult] = useState(null);
+
+  // RME Form State (FIXED)
+  const [rmeForm, setRmeForm] = useState({
+    chiefComplaint: '',
+    diagnosis: '',
+    treatment: '',
+    bloodPressure: '',
+    temperature: '',
+    heartRate: ''
+  });
 
   // ICD to SNOMED mapping
   const icdSnomedMapping = {
@@ -98,7 +105,6 @@ function UnifiedDashboard({ activeRole, setActiveRole }) {
   }, []);
 
   const fetchAllData = async () => {
-    setLoading(true);
     try {
       const [patientsRes, codingsRes] = await Promise.all([
         patientAPI.getAll(),
@@ -108,8 +114,6 @@ function UnifiedDashboard({ activeRole, setActiveRole }) {
       setCodings(codingsRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -130,6 +134,44 @@ function UnifiedDashboard({ activeRole, setActiveRole }) {
       setCodings(codingsRes.data);
     } catch (error) {
       console.error('Error fetching codings:', error);
+    }
+  };
+
+  // FIXED: Save RME Function
+  const handleSaveRME = async () => {
+    if (!rmeForm.chiefComplaint || !rmeForm.diagnosis) {
+      showNotif('⚠ Keluhan dan Diagnosis harus diisi!', 'error');
+      return;
+    }
+
+    try {
+      await medicalRecordAPI.create({
+        patientId: selectedPatient._id,
+        chiefComplaint: rmeForm.chiefComplaint,
+        diagnosis: rmeForm.diagnosis,
+        treatment: rmeForm.treatment,
+        doctor: 'Dr. Admin',
+        visitType: 'Rajal',
+        physicalExamination: {
+          bloodPressure: rmeForm.bloodPressure || '-',
+          temperature: parseFloat(rmeForm.temperature) || 0,
+          heartRate: parseInt(rmeForm.heartRate) || 0
+        }
+      });
+      
+      showNotif('✓ RME berhasil disimpan!', 'success');
+      setRmeForm({
+        chiefComplaint: '',
+        diagnosis: '',
+        treatment: '',
+        bloodPressure: '',
+        temperature: '',
+        heartRate: ''
+      });
+      setViewMode('list');
+      fetchAllData();
+    } catch (error) {
+      showNotif('Error: ' + error.message, 'error');
     }
   };
 
@@ -245,7 +287,7 @@ function UnifiedDashboard({ activeRole, setActiveRole }) {
     { id: 'admin', name: 'Admin', icon: BarChart3, color: 'orange' }
   ];
 
-  // ==================== HIM TAB (UPDATED) ====================
+  // ==================== HIM TAB ====================
   if (activeRole === 'coder') {
     return (
       <div>
@@ -465,7 +507,7 @@ function UnifiedDashboard({ activeRole, setActiveRole }) {
     );
   }
 
-  // ==================== AUDITOR TAB (ENHANCED) ====================
+  // ==================== AUDITOR TAB ====================
   if (activeRole === 'auditor') {
     const draftCodings = codings.filter(c => c.validationStatus === 'Draft');
     const validatedCodings = codings.filter(c => c.validationStatus === 'Validated');
@@ -687,7 +729,7 @@ function UnifiedDashboard({ activeRole, setActiveRole }) {
     );
   }
 
-  // ==================== DOKTER & ADMIN (KEEP EXISTING) ====================
+  // ==================== DOKTER & ADMIN ====================
   return (
     <div>
       <Notification />
@@ -799,6 +841,7 @@ function UnifiedDashboard({ activeRole, setActiveRole }) {
               </div>
             )}
 
+            {/* FIXED: RME Input Form with State Binding */}
             {viewMode === 'record' && selectedPatient && (
               <div>
                 <button
@@ -813,20 +856,74 @@ function UnifiedDashboard({ activeRole, setActiveRole }) {
                   
                   <div className="space-y-4 mb-6">
                     <div>
-                      <label className="block font-medium mb-2">Keluhan Utama</label>
-                      <input type="text" placeholder="e.g., Sakit kepala" className="w-full border rounded px-4 py-2" />
+                      <label className="block font-medium mb-2">Keluhan Utama *</label>
+                      <input 
+                        type="text" 
+                        value={rmeForm.chiefComplaint}
+                        onChange={(e) => setRmeForm(prev => ({...prev, chiefComplaint: e.target.value}))}
+                        placeholder="e.g., Sakit kepala" 
+                        className="w-full border rounded px-4 py-2" 
+                      />
                     </div>
                     <div>
-                      <label className="block font-medium mb-2">Diagnosis</label>
-                      <input type="text" placeholder="e.g., Malignant neoplasm of rectum" className="w-full border rounded px-4 py-2" />
+                      <label className="block font-medium mb-2">Diagnosis *</label>
+                      <input 
+                        type="text" 
+                        value={rmeForm.diagnosis}
+                        onChange={(e) => setRmeForm(prev => ({...prev, diagnosis: e.target.value}))}
+                        placeholder="e.g., Malignant neoplasm of rectum" 
+                        className="w-full border rounded px-4 py-2" 
+                      />
                     </div>
                     <div>
-                      <label className="block font-medium mb-2">Treatment</label>
-                      <textarea placeholder="Pengobatan yang diberikan..." rows="3" className="w-full border rounded px-4 py-2" />
+                      <label className="block font-medium mb-2">Penatalaksanaan/Treatment</label>
+                      <textarea 
+                        value={rmeForm.treatment}
+                        onChange={(e) => setRmeForm(prev => ({...prev, treatment: e.target.value}))}
+                        placeholder="Pengobatan yang diberikan..." 
+                        rows="3" 
+                        className="w-full border rounded px-4 py-2" 
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="block font-medium mb-2">Tekanan Darah</label>
+                        <input 
+                          type="text" 
+                          value={rmeForm.bloodPressure}
+                          onChange={(e) => setRmeForm(prev => ({...prev, bloodPressure: e.target.value}))}
+                          placeholder="e.g., 120/80" 
+                          className="w-full border rounded px-4 py-2" 
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-medium mb-2">Suhu (°C)</label>
+                        <input 
+                          type="number" 
+                          value={rmeForm.temperature}
+                          onChange={(e) => setRmeForm(prev => ({...prev, temperature: e.target.value}))}
+                          placeholder="e.g., 36.5" 
+                          className="w-full border rounded px-4 py-2" 
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-medium mb-2">HR (bpm)</label>
+                        <input 
+                          type="number" 
+                          value={rmeForm.heartRate}
+                          onChange={(e) => setRmeForm(prev => ({...prev, heartRate: e.target.value}))}
+                          placeholder="e.g., 70" 
+                          className="w-full border rounded px-4 py-2" 
+                        />
+                      </div>
                     </div>
                   </div>
                   
-                  <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                  <button 
+                    onClick={handleSaveRME}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium"
+                  >
                     Simpan RME
                   </button>
                 </div>
